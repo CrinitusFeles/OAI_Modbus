@@ -15,10 +15,23 @@ class OaiModbus(ModbusClient):
         self.connection_status = False
         self.modbus_client = None
 
-        self.actual_ao_regs = []
-        self.actual_ai_regs = []
+        self.ao_register_map = [0] * 10**4
+        self.ai_register_map = [0] * 10**4
+        self.__last_read_ao_range = []
+        self.__last_read_ai_range = []
+        self.ao_read_ranges = [[0, 3], [5, 12], [216, 925]]
+        self.ai_read_ranges = [[0, 3], [5, 12]]  # [start address (included); stop address (not included)]
+        self.write_ranges = [[0, [3, 5, 7, 2]], [8, [12, 2, 5, 7, 0, 1, 5, 7, 889, 33, 332, 2, 4, 5]]]
+
+        # thread flags
         self.continuously_ao_flag = False
         self.continuously_ai_flag = False
+        self.single_ao_flag = False
+        self.single_ai_flag = False
+        self.queues_survey_flag = False
+        self.continuously_write_flag = False
+
+        self.read_thread = threading.Thread(name='queue', target=self.__queue_continuously_survey, daemon=True)
 
     def connect(self):
         """
@@ -62,86 +75,62 @@ class OaiModbus(ModbusClient):
         except Exception as error:
             print(error)
 
-    def read_ao_regs(self, address=0, count=1):
+    def read_regs(self, target="ai"):
         """
-        Reading list of analog output register.
-        :param address: start address (min = 0; max = 10000).
-        :param count: amount of reading registers (min = 1; max = 120).
-        :return: list of 2-byte registers.
+        Reading list of analog input or output register.
+        :param target: ai - analog inputs; ao - analog outputs.
+        :return: register's map of analog inputs or outputs.
         """
-        try:
-            register_list = self.modbus_client.read_holding_registers(address, count, unit=1)
-            self.actual_ao_regs.clear()
-            self.actual_ao_regs = register_list.registers
-            return self.actual_ao_regs
-        except Exception as error:
-            print(error)
+        if target == 'ai':
+            last_read_range = self.__last_read_ai_range
+            read_ranges = self.ai_read_ranges
+            register_map = self.ai_register_map
+            target_function = self.modbus_client.read_input_registers
+            print_string = "ai"
+        else:
+            last_read_range = self.__last_read_ao_range
+            read_ranges = self.ao_read_ranges
+            register_map = self.ao_register_map
+            target_function = self.modbus_client.read_holding_registers
+            print_string = "ao"
+        # else:
+        #     print("TARGET ERROR")
 
-    def read_ai_regs(self, address=0, count=1):
-        """
-        Reading list of analog input register.
-        :param address: start address (min = 0; max = 10000).
-        :param count: amount of reading registers (min = 1; max = 120).
-        :return: list of 2-byte registers.
-        """
-        try:
-            register_list = self.modbus_client.read_input_registers(address, count, unit=1)
-            self.actual_ai_regs.clear()
-            self.actual_ai_regs = register_list.registers
-            return self.actual_ai_regs
-        except Exception as error:
-            print(error)
+        for k in range(len(read_ranges)):
+            last_read_range.clear()
+            count = read_ranges[k][1] - read_ranges[k][0]
+            if read_ranges[k][0] >= read_ranges[k][1]:
+                print(print_string, "range", k, "error")
+                raise ValueError("RANGE ERROR")
+            for i in (lambda x: range((x//10) + 1) if (x//10 >= 1 or x < 10) and x % 10 != 0 else range(x//10))(count):
+                try:
+                    register_list = target_function(
+                        read_ranges[k][0] + i * 10,
+                        (lambda x: x if x < 10 else 10)(count),
+                        unit=1
+                    )
+                    count -= 10
+                    last_read_range.extend(register_list.registers)
+                except Exception as error:
+                    print(error)
 
-    def write_regs(self, address, values):
+            for i in range(read_ranges[k][1] - read_ranges[k][0]):
+                register_map[read_ranges[k][0] + i] = last_read_range[i]
+            # print(print_string, "range[", k, "]: ", last_read_range)
+        return register_map
+
+    def write_regs(self):
         """
-        Writing list of registers.
-        :param address: address of first register where will be write list.
-        :param values: list of values which will be writen to address.
+        Writing lists of registers.
         :return: None.
         """
-
-        try:
-            self.modbus_client.write_registers(address, values, unit=1)
-        except Exception as error:
-            print(error)
-
-    def start_continuously_ao_reading(self, address=0, count=1, delay=1):
-        """
-        Start periodic request "analog output" regs.
-        :param address: start address (min = 0; max = 10000).
-        :param count:  amount of reading registers (min = 1; max = 120).
-        :param delay: delay in seconds between requests.
-        :return: None
-
-        NOTE: for gui app the thread should be daemon
-        """
-        self.continuously_ao_flag = True
-        t = threading.Thread(name='ao_read', target=self.__get_actual_ao_regs,
-                             daemon=False, kwargs={'address': address, 'count': count, 'delay': delay})
-        t.start()
-
-        if not t.is_alive():
-            self.continuously_ao_flag = False
-            print("some error with thread")
-
-    def start_continuously_ai_reading(self, address=0, count=1, delay=1):
-        """
-        Start periodic request "analog input" regs.
-        :param address: start address (min = 0; max = 10000).
-        :param count:  amount of reading registers (min = 1; max = 120).
-        :param delay: delay in seconds between requests.
-        :return: None
-
-        NOTE: for gui app the thread should be daemon
-        """
-        self.continuously_ai_flag = True
-        t = threading.Thread(name='ai_read', target=self.__get_actual_ai_regs,
-                             daemon=False, kwargs={'address': address, 'count': count, 'delay': delay})
-        t.start()
-
-        if not t.is_alive():
-            self.continuously_ai_flag = False
-            print("some error with thread")
+        for k in range(len(self.write_ranges)):
+            for i in range(0, len(self.write_ranges[k][1]), 10):
+                try:
+                    self.modbus_client.write_registers(self.write_ranges[k][0] + i, self.write_ranges[k][1][i: i + 10],
+                                                       unit=1)
+                except Exception as error:
+                    print(error)
 
     def stop_continuously_ai_reading(self):
         self.continuously_ai_flag = False
@@ -149,29 +138,62 @@ class OaiModbus(ModbusClient):
     def stop_continuously_ao_reading(self):
         self.continuously_ao_flag = False
 
-    def __get_actual_ao_regs(self, address=0, count=1, delay=1):
-        while self.continuously_ao_flag:
-            print(self.read_ao_regs(address=address, count=count))
-            time.sleep(delay)
+    def start_continuously_queue_reading(self):
+        """
+        Start read ao and ai regs in different thread. Before using you should to assign self.queues_survey_flag and
+        self.continuously_ai(ao)_flag
+        :return: None
+        """
+        self.queues_survey_flag = True
+        self.read_thread.start()
 
-    def __get_actual_ai_regs(self, address=0, count=1, delay=1):
-        while self.continuously_ai_flag:
-            print(self.read_ai_regs(address=address, count=count))
-            time.sleep(delay)
+        if not self.read_thread.is_alive():
+            self.queues_survey_flag = False
+            print("some error with thread")
 
-    # def connection_check(self):
-    #     if not self.connection_status:
-    #         print("device does not connect")
+    def __queue_continuously_survey(self):
+        while self.queues_survey_flag:
+            if self.single_ao_flag:
+                self.read_regs(target='ao')
+                self.single_ao_flag = False
+            if self.single_ai_flag:
+                self.read_regs(target='ai')
+                self.single_ai_flag = False
+
+            if self.continuously_ao_flag:
+                self.read_regs(target='ao')
+            if self.continuously_ai_flag:
+                self.read_regs(target='ai')
+            if self.continuously_write_flag:
+                self.write_regs()
+                self.continuously_write_flag = False
 
 
 if __name__ == '__main__':
+    # Attention!!! Before first launch add serial number of your device in "self.serial_numbers" (string 12)
     client = OaiModbus()
     client.connect()
+    client.continuously_ao_flag = False
+    client.continuously_ai_flag = False
+    client.single_ao_flag = True
+    client.single_ai_flag = True
+    test_mode = False  # for debug
+
     if client.connection_status:
-        client.write_regs(0, [1, 2, 5, 10])
-        print(client.read_ao_regs(0, 10))
-        # print(client.read_ai_regs(0, 10))
-        client.start_continuously_ai_reading(address=0, count=10, delay=1)
-        client.start_continuously_ao_reading(address=0, count=20, delay=1)
+        if test_mode:
+            # ---- test write -----
+            print("before write:", client.read_regs(target='ao'))
+            client.write_regs()
+            print("after write:", client.read_regs(target='ao'))
+            # ---------------------
+        else:
+            client.start_continuously_queue_reading()
+            time.sleep(1)
+            client.write_regs()
+            time.sleep(1)
+            client.queues_survey_flag = False
+        print("ai register_map:", client.ai_register_map[:1000])
+        print("ao register_map:", client.ao_register_map[:1000])
+
     else:
         print("connection issues")
