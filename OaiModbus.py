@@ -19,9 +19,10 @@ class OaiModbus(ModbusClient):
         self.ai_register_map = [0] * 10**4
         self.__last_read_ao_range = []
         self.__last_read_ai_range = []
-        self.ao_read_ranges = [[0, 3], [5, 12], [216, 925]]
+        self.ao_read_ranges = [[0, 3], [12, 13], [216, 925]]
         self.ai_read_ranges = [[0, 3], [5, 12]]  # [start address (included); stop address (not included)]
         self.write_ranges = [[0, [3, 5, 7, 2]], [8, [12, 2, 5, 7, 0, 1, 5, 7, 889, 33, 332, 2, 4, 5]]]
+        self.reverse_bytes_flag = True
 
         # thread flags
         self.continuously_ao_flag = False
@@ -110,7 +111,16 @@ class OaiModbus(ModbusClient):
                         unit=1
                     )
                     count -= 10
-                    last_read_range.extend(register_list.registers)
+                    if self.reverse_bytes_flag:
+                        buf_reg = []
+                        for j in register_list.registers:
+                            if j > 255:
+                                buf_reg.append((j >> 8) | ((j & 0xFF) << 8))
+                            else:
+                                buf_reg.append(j << 8)
+                                last_read_range.extend(buf_reg)
+                    else:
+                        last_read_range.extend(register_list.registers)
                 except Exception as error:
                     print(error)
 
@@ -154,14 +164,20 @@ class OaiModbus(ModbusClient):
     def __queue_continuously_survey(self):
         while self.queues_survey_flag:
             if self.single_ao_flag:
-                self.read_regs(target='ao')
+                try:
+                    self.read_regs(target='ao')
+                except ValueError as error:
+                    print(error)
                 self.single_ao_flag = False
             if self.single_ai_flag:
                 self.read_regs(target='ai')
                 self.single_ai_flag = False
 
             if self.continuously_ao_flag:
-                self.read_regs(target='ao')
+                try:
+                    self.read_regs(target='ao')
+                except ValueError as error:
+                    print(error)
             if self.continuously_ai_flag:
                 self.read_regs(target='ai')
             if self.continuously_write_flag:
@@ -173,11 +189,11 @@ if __name__ == '__main__':
     # Attention!!! Before first launch add serial number of your device in "self.serial_numbers" (string 12)
     client = OaiModbus()
     client.connect()
-    client.continuously_ao_flag = False
-    client.continuously_ai_flag = False
-    client.single_ao_flag = True
-    client.single_ai_flag = True
-    test_mode = False  # for debug
+    client.continuously_ao_flag = True
+    client.continuously_ai_flag = True
+    client.single_ao_flag = False
+    client.single_ai_flag = False
+    test_mode = True  # for debug
 
     if client.connection_status:
         if test_mode:
@@ -188,9 +204,9 @@ if __name__ == '__main__':
             # ---------------------
         else:
             client.start_continuously_queue_reading()
-            time.sleep(1)
+            time.sleep(5)
             client.write_regs()
-            time.sleep(1)
+            time.sleep(5)
             client.queues_survey_flag = False
         print("ai register_map:", client.ai_register_map[:1000])
         print("ao register_map:", client.ao_register_map[:1000])
