@@ -134,6 +134,13 @@ class OaiModbus(ModbusClient):
         Writing lists of registers.
         :return: None.
         """
+        if self.reverse_bytes_flag:
+            buf_reg = []
+            for j in self.write_ranges:
+                buf_reg.append([j[0], (j[1] >> 8) | (j[1] & 0xFF)])
+            self.write_ranges = buf_reg
+            print("buf_reg: ", buf_reg)
+
         for k in range(len(self.write_ranges)):
             for i in range(0, len(self.write_ranges[k][1]), 10):
                 try:
