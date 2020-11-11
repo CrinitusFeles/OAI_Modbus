@@ -141,6 +141,7 @@ class OaiModbus(ModbusClient):
                 for k in j[1]:
                     buf.append((k >> 8) | (k & 0xFF))
                 buf_reg.append([j[0], buf])
+                buf = []
             self.write_ranges = buf_reg
             print("buf_reg: ", buf_reg)
 
