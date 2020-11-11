@@ -136,8 +136,11 @@ class OaiModbus(ModbusClient):
         """
         if self.reverse_bytes_flag:
             buf_reg = []
+            buf = []
             for j in self.write_ranges:
-                buf_reg.append([j[0], (j[1] >> 8) | (j[1] & 0xFF)])
+                for k in j[1]:
+                    buf.append((k >> 8) | (k & 0xFF))
+                buf_reg.append([j[0], buf])
             self.write_ranges = buf_reg
             print("buf_reg: ", buf_reg)
 
