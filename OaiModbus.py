@@ -118,7 +118,7 @@ class OaiModbus(ModbusClient):
                                 buf_reg.append((j >> 8) | ((j & 0xFF) << 8))
                             else:
                                 buf_reg.append(j << 8)
-                            last_read_range.extend(buf_reg)
+                        last_read_range.extend(buf_reg)
                     else:
                         last_read_range.extend(register_list.registers)
                 except Exception as error:
@@ -126,7 +126,7 @@ class OaiModbus(ModbusClient):
 
             for i in range(read_ranges[k][1] - read_ranges[k][0]):
                 register_map[read_ranges[k][0] + i] = last_read_range[i]
-            # print(print_string, "range[", k, "]: ", last_read_range)
+            # print(print_string, " range[", k, "]: ", last_read_range)
         return register_map
 
     def write_regs(self):
