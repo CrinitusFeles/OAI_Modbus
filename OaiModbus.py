@@ -37,10 +37,11 @@ class OaiModbus(ModbusClient):
     def connect(self):
         """
         Set connection with device via serial port.
-        :return: None
+        :return: list of all connected devices in format [com port, serial num]
         """
         try:
-            if self.__get_id():
+            serial_num_list = self.__get_id()
+            if self.connection_status:
                 self.modbus_client = ModbusClient(method='rtu', port=self.port, baudrate=self.baudrate, parity='N',
                                                   timeout=self.timeout)
                 if self.modbus_client.connect():
@@ -49,6 +50,8 @@ class OaiModbus(ModbusClient):
                     print("failed connection")
             else:
                 print("ERROR: devices not detected")
+                print("there are only this serial nums: ", serial_num_list)
+                return serial_num_list
 
         except Exception as error:
             print(error)
@@ -56,23 +59,28 @@ class OaiModbus(ModbusClient):
     def __get_id(self):
         """
         Internal function for definition of usb ID from list of available devices (self.serial_numbers).
-        :return: connection status (True - successful connection; False - failed connection.
+        :return: connection status (True - successful connection; False - failed connection).
+        if error - returns connected devices serial num list
         """
+        serial_num_list = []
         try:
             com_list = serial.tools.list_ports.comports()
             if len(com_list) == 0:
                 print("There is no connected devices")
                 self.connection_status = False
                 return self.connection_status
-            # print('\nDetected the following serial ports:')
+            print('\nDetected the following serial ports:')
             for com in com_list:
-                # print('Port:%s\tID#:=%s' % (com.device, com.serial_number))
+                print('Port:%s\tID#:=%s' % (com.device, com.serial_number))
+                serial_num_list.append([com.device, com.serial_number])
                 for ID in self.serial_numbers:
                     if com.serial_number is not None:
                         if com.serial_number.__str__()[:len(ID)] == ID:  # Match ID with the correct port
                             self.port = com.device  # Store the device name to later open port with.
                             self.connection_status = True
                             return self.connection_status
+            # no one is correct
+            return serial_num_list
         except Exception as error:
             print(error)
 
@@ -197,7 +205,7 @@ class OaiModbus(ModbusClient):
 
 
 if __name__ == '__main__':
-    # Attention!!! Before first launch add serial number of your device in "self.serial_numbers" (string 12)
+    # Attention!!! Before first launch add serial number of your device in "self.serial_numbers" (string 11)
     client = OaiModbus()
     client.connect()
     client.continuously_ao_flag = True
