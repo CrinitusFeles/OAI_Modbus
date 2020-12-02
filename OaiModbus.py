@@ -4,7 +4,7 @@ import threading
 import time
 
 
-class OaiModbus(ModbusClient):
+class OaiModbus(ModbusClient): #test commit
     def __init__(self, **kwargs):
         super().__init__(**kwargs)
 
