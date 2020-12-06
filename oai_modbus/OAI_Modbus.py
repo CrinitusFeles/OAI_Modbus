@@ -4,7 +4,7 @@ import threading
 import time
 
 
-class OaiModbus(ModbusClient):
+class OAI_Modbus(ModbusClient):
     def __init__(self, **kwargs):
         super().__init__(**kwargs)
 
