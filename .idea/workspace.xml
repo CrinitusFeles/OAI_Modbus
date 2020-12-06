@@ -1,7 +1,28 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <project version="4">
+  <component name="BranchesTreeState">
+    <expand>
+      <path>
+        <item name="ROOT" type="e8cecc67:BranchNodeDescriptor" />
+        <item name="LOCAL_ROOT" type="e8cecc67:BranchNodeDescriptor" />
+      </path>
+      <path>
+        <item name="ROOT" type="e8cecc67:BranchNodeDescriptor" />
+        <item name="REMOTE_ROOT" type="e8cecc67:BranchNodeDescriptor" />
+      </path>
+      <path>
+        <item name="ROOT" type="e8cecc67:BranchNodeDescriptor" />
+        <item name="REMOTE_ROOT" type="e8cecc67:BranchNodeDescriptor" />
+        <item name="GROUP_NODE:origin" type="e8cecc67:BranchNodeDescriptor" />
+      </path>
+    </expand>
+    <select />
+  </component>
   <component name="ChangeListManager">
-    <list default="true" id="e64949cb-cb56-4b7b-9836-5c0409ad5a2a" name="Default Changelist" comment="" />
+    <list default="true" id="e64949cb-cb56-4b7b-9836-5c0409ad5a2a" name="Default Changelist" comment="test commit">
+      <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/OaiModbus.py" beforeDir="false" afterPath="$PROJECT_DIR$/OaiModbus.py" afterDir="false" />
+    </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
     <option name="HIGHLIGHT_NON_ACTIVE_CHANGELIST" value="false" />
@@ -26,7 +47,7 @@
     <property name="RunOnceActivity.OpenProjectViewOnStart" value="true" />
     <property name="last_opened_file_path" value="$PROJECT_DIR$" />
     <property name="restartRequiresConfirmation" value="false" />
-    <property name="settings.editor.selected.configurable" value="com.jetbrains.python.configuration.PyActiveSdkModuleConfigurable" />
+    <property name="settings.editor.selected.configurable" value="vcs.Git" />
   </component>
   <component name="RunManager" selected="Python.OaiModbus">
     <configuration name="OaiModbus" type="PythonConfigurationType" factoryName="Python" nameIsGenerated="true">
@@ -83,7 +104,7 @@
   </component>
   <component name="SpellCheckerSettings" RuntimeDictionaries="0" Folders="0" CustomDictionaries="0" DefaultDictionary="application-level" UseSingleDictionary="true" transferred="true" />
   <component name="SvnConfiguration">
-    <configuration />
+    <configuration>C:\Users\Gandalf\AppData\Roaming\Subversion</configuration>
   </component>
   <component name="TaskManager">
     <task active="true" id="Default" summary="Default task">
@@ -100,7 +121,14 @@
       <option name="project" value="LOCAL" />
       <updated>1601751444610</updated>
     </task>
-    <option name="localTasksCounter" value="2" />
+    <task id="LOCAL-00002" summary="test commit">
+      <created>1606906832807</created>
+      <option name="number" value="00002" />
+      <option name="presentableId" value="LOCAL-00002" />
+      <option name="project" value="LOCAL" />
+      <updated>1606906832807</updated>
+    </task>
+    <option name="localTasksCounter" value="3" />
     <servers />
   </component>
   <component name="Vcs.Log.Tabs.Properties">
@@ -117,7 +145,8 @@
   </component>
   <component name="VcsManagerConfiguration">
     <MESSAGE value="v1.0.1" />
-    <option name="LAST_COMMIT_MESSAGE" value="v1.0.1" />
+    <MESSAGE value="test commit" />
+    <option name="LAST_COMMIT_MESSAGE" value="test commit" />
   </component>
   <component name="WindowStateProjectService">
     <state x="414" y="211" key="#com.intellij.execution.impl.EditConfigurationsDialog" timestamp="1601979011537">
@@ -130,27 +159,31 @@
     </state>
     <state x="-1180" y="409" key="FileChooserDialogImpl/0.0.1920.1160/-1920.109.1920.1040@-1920.109.1920.1040" timestamp="1601981109657" />
     <state x="740" y="335" key="FileChooserDialogImpl/0.0.1920.1160@0.0.1920.1160" timestamp="1601014429129" />
-    <state width="1899" height="264" key="GridCell.Tab.0.bottom" timestamp="1605101904617">
-      <screen x="0" y="0" width="1920" height="1160" />
+    <state width="1259" height="132" key="GridCell.Tab.0.bottom" timestamp="1607246120833">
+      <screen x="0" y="0" width="1280" height="680" />
     </state>
+    <state width="1259" height="132" key="GridCell.Tab.0.bottom/0.0.1280.680@0.0.1280.680" timestamp="1607246120833" />
     <state width="1899" height="228" key="GridCell.Tab.0.bottom/0.0.1920.1040@0.0.1920.1040" timestamp="1601979529327" />
     <state width="1899" height="228" key="GridCell.Tab.0.bottom/0.0.1920.1160/1920.0.1920.1040@0.0.1920.1160" timestamp="1601980189862" />
     <state width="1899" height="264" key="GridCell.Tab.0.bottom/0.0.1920.1160@0.0.1920.1160" timestamp="1605101904617" />
-    <state width="1899" height="264" key="GridCell.Tab.0.center" timestamp="1605101904617">
-      <screen x="0" y="0" width="1920" height="1160" />
+    <state width="1259" height="132" key="GridCell.Tab.0.center" timestamp="1607246120832">
+      <screen x="0" y="0" width="1280" height="680" />
     </state>
+    <state width="1259" height="132" key="GridCell.Tab.0.center/0.0.1280.680@0.0.1280.680" timestamp="1607246120832" />
     <state width="1899" height="228" key="GridCell.Tab.0.center/0.0.1920.1040@0.0.1920.1040" timestamp="1601979529327" />
     <state width="1899" height="228" key="GridCell.Tab.0.center/0.0.1920.1160/1920.0.1920.1040@0.0.1920.1160" timestamp="1601980189862" />
     <state width="1899" height="264" key="GridCell.Tab.0.center/0.0.1920.1160@0.0.1920.1160" timestamp="1605101904617" />
-    <state width="1899" height="264" key="GridCell.Tab.0.left" timestamp="1605101904617">
-      <screen x="0" y="0" width="1920" height="1160" />
+    <state width="1259" height="132" key="GridCell.Tab.0.left" timestamp="1607246120832">
+      <screen x="0" y="0" width="1280" height="680" />
     </state>
+    <state width="1259" height="132" key="GridCell.Tab.0.left/0.0.1280.680@0.0.1280.680" timestamp="1607246120832" />
     <state width="1899" height="228" key="GridCell.Tab.0.left/0.0.1920.1040@0.0.1920.1040" timestamp="1601979529327" />
     <state width="1899" height="228" key="GridCell.Tab.0.left/0.0.1920.1160/1920.0.1920.1040@0.0.1920.1160" timestamp="1601980189862" />
     <state width="1899" height="264" key="GridCell.Tab.0.left/0.0.1920.1160@0.0.1920.1160" timestamp="1605101904617" />
-    <state width="1899" height="264" key="GridCell.Tab.0.right" timestamp="1605101904617">
-      <screen x="0" y="0" width="1920" height="1160" />
+    <state width="1259" height="132" key="GridCell.Tab.0.right" timestamp="1607246120833">
+      <screen x="0" y="0" width="1280" height="680" />
     </state>
+    <state width="1259" height="132" key="GridCell.Tab.0.right/0.0.1280.680@0.0.1280.680" timestamp="1607246120833" />
     <state width="1899" height="228" key="GridCell.Tab.0.right/0.0.1920.1040@0.0.1920.1040" timestamp="1601979529327" />
     <state width="1899" height="228" key="GridCell.Tab.0.right/0.0.1920.1160/1920.0.1920.1040@0.0.1920.1160" timestamp="1601980189862" />
     <state width="1899" height="264" key="GridCell.Tab.0.right/0.0.1920.1160@0.0.1920.1160" timestamp="1605101904617" />
@@ -178,10 +211,15 @@
     <state width="1899" height="228" key="GridCell.Tab.1.right/0.0.1920.1040@0.0.1920.1040" timestamp="1601979529327" />
     <state width="1899" height="228" key="GridCell.Tab.1.right/0.0.1920.1160/1920.0.1920.1040@0.0.1920.1160" timestamp="1601980189862" />
     <state width="1899" height="261" key="GridCell.Tab.1.right/0.0.1920.1160@0.0.1920.1160" timestamp="1601302425123" />
-    <state x="492" y="221" key="SettingsEditor" timestamp="1600750887395">
-      <screen x="0" y="0" width="1920" height="1160" />
+    <state x="284" y="0" key="SettingsEditor" timestamp="1606907119701">
+      <screen x="0" y="0" width="1280" height="680" />
     </state>
+    <state x="284" y="0" key="SettingsEditor/0.0.1280.680@0.0.1280.680" timestamp="1606907119701" />
     <state x="492" y="221" key="SettingsEditor/0.0.1920.1160@0.0.1920.1160" timestamp="1600750887395" />
+    <state x="233" y="74" key="Vcs.Push.Dialog.v2" timestamp="1606906889069">
+      <screen x="0" y="0" width="1280" height="680" />
+    </state>
+    <state x="233" y="74" key="Vcs.Push.Dialog.v2/0.0.1280.680@0.0.1280.680" timestamp="1606906889069" />
     <state x="458" y="311" width="672" height="678" key="search.everywhere.popup" timestamp="1601270179975">
       <screen x="0" y="0" width="1920" height="1160" />
     </state>
