@@ -4,12 +4,12 @@ import threading
 import time
 
 
-class OaiModbus(ModbusClient): #test commit
+class OaiModbus(ModbusClient):
     def __init__(self, **kwargs):
         super().__init__(**kwargs)
 
-        self.serial_numbers = ['2057359A5748']  # you need to add the new ID of your devices YOURSELF.
-        self.baudrate = 115200
+        self.serial_numbers = kwargs.get('serial_id', '2057359A5748')
+        self.baudrate = kwargs.get('baudrate', 115200)
         self.timeout = 1
         self.port = ''
         self.connection_status = False
@@ -19,9 +19,9 @@ class OaiModbus(ModbusClient): #test commit
         self.ai_register_map = [0] * 10**4
         self.__last_read_ao_range = []
         self.__last_read_ai_range = []
-        self.ao_read_ranges = [[0, 3], [12, 13], [216, 925]]
-        self.ai_read_ranges = [[0, 3], [5, 12]]  # [start address (included); stop address (not included)]
-        self.write_ranges = [[0, [3, 5, 7, 2]], [8, [12, 2, 5, 7, 0, 1, 5, 7, 889, 33, 332, 2, 4, 5]]]
+        self.ao_read_ranges = [[]]
+        self.ai_read_ranges = [[]]  # [start address (included); stop address (not included)]
+        self.write_ranges = [[[]]]
         self.reverse_bytes_flag = True
 
         # thread flags
@@ -151,7 +151,6 @@ class OaiModbus(ModbusClient): #test commit
                 buf_reg.append([j[0], buf])
                 buf = []
             self.write_ranges = buf_reg
-            print("buf_reg: ", buf_reg)
 
         for k in range(len(self.write_ranges)):
             for i in range(0, len(self.write_ranges[k][1]), 10):
@@ -205,14 +204,19 @@ class OaiModbus(ModbusClient): #test commit
 
 
 if __name__ == '__main__':
-    # Attention!!! Before first launch add serial number of your device in "self.serial_numbers" (string 11)
-    client = OaiModbus()
+    client = OaiModbus(serial_id='2057359A5748')
     client.connect()
     client.continuously_ao_flag = True
     client.continuously_ai_flag = True
     client.single_ao_flag = False
     client.single_ai_flag = False
     test_mode = True  # for debug
+
+    client.ao_register_map = [0] * 10 ** 4
+    client.ai_register_map = [0] * 10 ** 4
+    client.ao_read_ranges = [[0, 3], [12, 13], [216, 925]]
+    client.ai_read_ranges = [[0, 3], [5, 12]]  # [start address (included); stop address (not included)]
+    client.write_ranges = [[0, [3, 5, 7, 2]], [8, [12, 2, 5, 7, 0, 1, 5, 7, 889, 33, 332, 2, 4, 5]]]
 
     if client.connection_status:
         if test_mode:
