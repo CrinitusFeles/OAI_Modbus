@@ -204,7 +204,7 @@ class OAI_Modbus(ModbusClient):
 
 
 if __name__ == '__main__':
-    client = OaiModbus(serial_id='2057359A5748')
+    client = OAI_Modbus(serial_id='2057359A5748')
     client.connect()
     client.continuously_ao_flag = True
     client.continuously_ai_flag = True
