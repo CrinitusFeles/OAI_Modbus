@@ -14,6 +14,7 @@ class OAI_Modbus(ModbusClient):
         self.port = ''
         self.connection_status = False
         self.modbus_client = None
+        self.debug_print_flag = True
 
         self.ao_register_map = [0] * 10**4
         self.ai_register_map = [0] * 10**4
@@ -34,6 +35,10 @@ class OAI_Modbus(ModbusClient):
 
         self.read_thread = threading.Thread(name='queue', target=self.__queue_continuously_survey, daemon=True)
 
+    def debug_print(self, string):
+        if self.debug_print_flag:
+            print(string)
+
     def connect(self):
         """
         Set connection with device via serial port.
@@ -45,16 +50,16 @@ class OAI_Modbus(ModbusClient):
                 self.modbus_client = ModbusClient(method='rtu', port=self.port, baudrate=self.baudrate, parity='N',
                                                   timeout=self.timeout)
                 if self.modbus_client.connect():
-                    print("success connection")
+                    self.debug_print("success connection")
                 else:
-                    print("failed connection")
+                    self.debug_print("failed connection")
             else:
-                print("ERROR: devices not detected")
-                print("there are only this serial nums: ", serial_num_list)
+                self.debug_print("ERROR: devices not detected")
+                self.debug_print(["there are only this serial nums: ", serial_num_list])
                 return serial_num_list
 
         except Exception as error:
-            print(error)
+            self.debug_print(error)
 
     def __get_id(self):
         """
@@ -66,12 +71,12 @@ class OAI_Modbus(ModbusClient):
         try:
             com_list = serial.tools.list_ports.comports()
             if len(com_list) == 0:
-                print("There is no connected devices")
+                self.debug_print("There is no connected devices")
                 self.connection_status = False
                 return self.connection_status
-            print('\nDetected the following serial ports:')
+            self.debug_print('\nDetected the following serial ports:')
             for com in com_list:
-                print('Port:%s\tID#:=%s' % (com.device, com.serial_number))
+                self.debug_print('Port:%s\tID#:=%s' % (com.device, com.serial_number))
                 serial_num_list.append([com.device, com.serial_number])
                 for ID in self.serial_numbers:
                     if com.serial_number is not None:
@@ -82,7 +87,7 @@ class OAI_Modbus(ModbusClient):
             # no one is correct
             return serial_num_list
         except Exception as error:
-            print(error)
+            self.debug_print(error)
 
     def read_regs(self, target="ai"):
         """
@@ -109,7 +114,7 @@ class OAI_Modbus(ModbusClient):
             last_read_range.clear()
             count = read_ranges[k][1] - read_ranges[k][0]
             if read_ranges[k][0] >= read_ranges[k][1]:
-                print(print_string, "range", k, "error")
+                self.debug_print([print_string, "range", k, "error"])
                 raise ValueError("RANGE ERROR")
             for i in (lambda x: range((x//10) + 1) if (x//10 >= 1 or x < 10) and x % 10 != 0 else range(x//10))(count):
                 try:
@@ -130,7 +135,7 @@ class OAI_Modbus(ModbusClient):
                     else:
                         last_read_range.extend(register_list.registers)
                 except Exception as error:
-                    print(error)
+                    self.debug_print(error)
 
             for i in range(read_ranges[k][1] - read_ranges[k][0]):
                 register_map[read_ranges[k][0] + i] = last_read_range[i]
@@ -158,7 +163,7 @@ class OAI_Modbus(ModbusClient):
                     self.modbus_client.write_registers(self.write_ranges[k][0] + i, self.write_ranges[k][1][i: i + 10],
                                                        unit=1)
                 except Exception as error:
-                    print(error)
+                    self.debug_print(error)
 
     def stop_continuously_ai_reading(self):
         self.continuously_ai_flag = False
@@ -177,7 +182,7 @@ class OAI_Modbus(ModbusClient):
 
         if not self.read_thread.is_alive():
             self.queues_survey_flag = False
-            print("some error with thread")
+            self.debug_print("some error with thread")
 
     def __queue_continuously_survey(self):
         while self.queues_survey_flag:
@@ -185,7 +190,7 @@ class OAI_Modbus(ModbusClient):
                 try:
                     self.read_regs(target='ao')
                 except ValueError as error:
-                    print(error)
+                    self.debug_print(error)
                 self.single_ao_flag = False
             if self.single_ai_flag:
                 self.read_regs(target='ai')
@@ -195,7 +200,7 @@ class OAI_Modbus(ModbusClient):
                 try:
                     self.read_regs(target='ao')
                 except ValueError as error:
-                    print(error)
+                    self.debug_print(error)
             if self.continuously_ai_flag:
                 self.read_regs(target='ai')
             if self.continuously_write_flag:
