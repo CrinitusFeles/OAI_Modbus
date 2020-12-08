@@ -10,6 +10,6 @@ pip install https://github.com/CrinitusFeles/OaiModbus/releases/download/v.1.1/O
 ```
 ## Update 
 ```sh
-pip unisntall oai_modbus
+pip uninstall oai_modbus
 ```
 and do [Installation](#Installation)
