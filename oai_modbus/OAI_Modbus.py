@@ -60,6 +60,7 @@ class OAI_Modbus(ModbusClient):
                     self.debug_print("failed connection")
                     return -1
             else:
+                self.debug_print(self.get_connected_devices())
                 self.connection_status = False
                 self.debug_print("ERROR: devices not detected")
                 return -1
@@ -70,6 +71,7 @@ class OAI_Modbus(ModbusClient):
     def disconnect(self):
         self.modbus_client.close()
         self.connection_status = False
+        self.debug_print("disconnected")
 
     def get_connected_devices(self):
         serial_num_list = []
@@ -95,8 +97,9 @@ class OAI_Modbus(ModbusClient):
         try:
             ser_nums = self.get_connected_devices()
             for com in ser_nums:
-                for ID in self.serial_numbers:
-                    if com[1] != '':
+                if com[1] != '':
+                    for ID in self.serial_numbers:
+                        self.debug_print(["ID: ", ID, "com: ", com[1]])
                         if com[1].__str__()[:len(ID)] == ID:  # Match ID with the correct port
                             self.port = com[0]  # Store the device name to later open port with.
                             return True
