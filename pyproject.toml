@@ -5,7 +5,7 @@ description = ""
 authors = ["crinitusfeles <crinitusfeles@gmail.com>"]
 
 [tool.poetry.dependencies]
-python = "^3.8"
+python = "^3.7"
 pymodbus = "^2.4.0"
 pyserial = "^3.5"
 

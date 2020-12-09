@@ -8,13 +8,15 @@ class OAI_Modbus(ModbusClient):
     def __init__(self, **kwargs):
         super().__init__(**kwargs)
 
-        self.serial_numbers = kwargs.get('serial_id', '2057359A5748')
+        self.serial_numbers = kwargs.get('serial_num', ['2057359A5748'])
         self.baudrate = kwargs.get('baudrate', 115200)
         self.timeout = 1
         self.port = ''
         self.connection_status = False
+
         self.modbus_client = None
-        self.debug_print_flag = True
+        self.debug_print_flag = kwargs.get('debug', True)
+        self.lock = threading.Lock()
 
         self.ao_register_map = [0] * 10**4
         self.ai_register_map = [0] * 10**4
@@ -42,50 +44,63 @@ class OAI_Modbus(ModbusClient):
     def connect(self):
         """
         Set connection with device via serial port.
-        :return: list of all connected devices in format [com port, serial num]
+        :return: 1 - success connection
+                -1 - failed connection
         """
         try:
-            serial_num_list = self.__get_id()
-            if self.connection_status:
+            if self.__get_overlap():
                 self.modbus_client = ModbusClient(method='rtu', port=self.port, baudrate=self.baudrate, parity='N',
                                                   timeout=self.timeout)
                 if self.modbus_client.connect():
+                    self.connection_status = True
                     self.debug_print("success connection")
+                    return 1
                 else:
+                    self.connection_status = False
                     self.debug_print("failed connection")
+                    return -1
             else:
+                self.connection_status = False
                 self.debug_print("ERROR: devices not detected")
-                self.debug_print(["there are only this serial nums: ", serial_num_list])
-                return serial_num_list
+                return -1
 
         except Exception as error:
             self.debug_print(error)
 
-    def __get_id(self):
-        """
-        Internal function for definition of usb ID from list of available devices (self.serial_numbers).
-        :return: connection status (True - successful connection; False - failed connection).
-        if error - returns connected devices serial num list
-        """
+    def disconnect(self):
+        self.modbus_client.close()
+        self.connection_status = False
+
+    def get_connected_devices(self):
         serial_num_list = []
         try:
             com_list = serial.tools.list_ports.comports()
             if len(com_list) == 0:
                 self.debug_print("There is no connected devices")
-                self.connection_status = False
-                return self.connection_status
+                return []
             self.debug_print('\nDetected the following serial ports:')
             for com in com_list:
                 self.debug_print('Port:%s\tID#:=%s' % (com.device, com.serial_number))
                 serial_num_list.append([com.device, com.serial_number])
-                for ID in self.serial_numbers:
-                    if com.serial_number is not None:
-                        if com.serial_number.__str__()[:len(ID)] == ID:  # Match ID with the correct port
-                            self.port = com.device  # Store the device name to later open port with.
-                            self.connection_status = True
-                            return self.connection_status
-            # no one is correct
             return serial_num_list
+        except Exception as error:
+            self.debug_print(error)
+
+    def __get_overlap(self):
+        """
+        Internal function for definition of usb ID from list of available devices (self.serial_numbers).
+        :return: connection status (True - successful connection; False - failed connection).
+        if error - returns connected devices serial num list
+        """
+        try:
+            ser_nums = self.get_connected_devices()
+            for com in ser_nums:
+                for ID in self.serial_numbers:
+                    if com[1] != '':
+                        if com[1].__str__()[:len(ID)] == ID:  # Match ID with the correct port
+                            self.port = com[0]  # Store the device name to later open port with.
+                            return True
+            return False
         except Exception as error:
             self.debug_print(error)
 
@@ -109,37 +124,38 @@ class OAI_Modbus(ModbusClient):
             print_string = "ao"
         # else:
         #     print("TARGET ERROR")
+        with self.lock:
+            for k in range(len(read_ranges)):
+                last_read_range.clear()
+                count = read_ranges[k][1] - read_ranges[k][0]
+                if read_ranges[k][0] >= read_ranges[k][1]:
+                    self.debug_print([print_string, "range", k, "error"])
+                    raise ValueError("RANGE ERROR")
+                for i in (lambda x: range((x//10) + 1) if (x//10 >= 1 or x < 10) and x % 10 != 0 else range(x//10))(count):
+                    try:
+                        register_list = target_function(
+                            read_ranges[k][0] + i * 10,
+                            (lambda x: x if x < 10 else 10)(count),
+                            unit=1
+                        )
+                        count -= 10
+                        if self.reverse_bytes_flag:
+                            buf_reg = []
+                            for j in register_list.registers:
+                                if j > 255:
+                                    buf_reg.append((j >> 8) | ((j & 0xFF) << 8))
+                                else:
+                                    buf_reg.append(j << 8)
+                            last_read_range.extend(buf_reg)
+                        else:
+                            last_read_range.extend(register_list.registers)
+                    except Exception as error:
+                        self.debug_print(error)
 
-        for k in range(len(read_ranges)):
-            last_read_range.clear()
-            count = read_ranges[k][1] - read_ranges[k][0]
-            if read_ranges[k][0] >= read_ranges[k][1]:
-                self.debug_print([print_string, "range", k, "error"])
-                raise ValueError("RANGE ERROR")
-            for i in (lambda x: range((x//10) + 1) if (x//10 >= 1 or x < 10) and x % 10 != 0 else range(x//10))(count):
-                try:
-                    register_list = target_function(
-                        read_ranges[k][0] + i * 10,
-                        (lambda x: x if x < 10 else 10)(count),
-                        unit=1
-                    )
-                    count -= 10
-                    if self.reverse_bytes_flag:
-                        buf_reg = []
-                        for j in register_list.registers:
-                            if j > 255:
-                                buf_reg.append((j >> 8) | ((j & 0xFF) << 8))
-                            else:
-                                buf_reg.append(j << 8)
-                        last_read_range.extend(buf_reg)
-                    else:
-                        last_read_range.extend(register_list.registers)
-                except Exception as error:
-                    self.debug_print(error)
+                for i in range(read_ranges[k][1] - read_ranges[k][0]):
+                    register_map[read_ranges[k][0] + i] = last_read_range[i]
+                # print(print_string, " range[", k, "]: ", last_read_range)
 
-            for i in range(read_ranges[k][1] - read_ranges[k][0]):
-                register_map[read_ranges[k][0] + i] = last_read_range[i]
-            # print(print_string, " range[", k, "]: ", last_read_range)
         return register_map
 
     def write_regs(self):
@@ -147,23 +163,24 @@ class OAI_Modbus(ModbusClient):
         Writing lists of registers.
         :return: None.
         """
-        if self.reverse_bytes_flag:
-            buf_reg = []
-            buf = []
-            for j in self.write_ranges:
-                for k in j[1]:
-                    buf.append((k >> 8) | ((k & 0xFF) << 8))
-                buf_reg.append([j[0], buf])
+        with self.lock:
+            if self.reverse_bytes_flag:
+                buf_reg = []
                 buf = []
-            self.write_ranges = buf_reg
+                for j in self.write_ranges:
+                    for k in j[1]:
+                        buf.append((k >> 8) | ((k & 0xFF) << 8))
+                    buf_reg.append([j[0], buf])
+                    buf = []
+                self.write_ranges = buf_reg
 
-        for k in range(len(self.write_ranges)):
-            for i in range(0, len(self.write_ranges[k][1]), 10):
-                try:
-                    self.modbus_client.write_registers(self.write_ranges[k][0] + i, self.write_ranges[k][1][i: i + 10],
-                                                       unit=1)
-                except Exception as error:
-                    self.debug_print(error)
+            for k in range(len(self.write_ranges)):
+                for i in range(0, len(self.write_ranges[k][1]), 10):
+                    try:
+                        self.modbus_client.write_registers(self.write_ranges[k][0] + i, self.write_ranges[k][1][i: i + 10],
+                                                           unit=1)
+                    except Exception as error:
+                        self.debug_print(error)
 
     def stop_continuously_ai_reading(self):
         self.continuously_ai_flag = False
@@ -209,7 +226,8 @@ class OAI_Modbus(ModbusClient):
 
 
 if __name__ == '__main__':
-    client = OAI_Modbus(serial_id='2057359A5748')
+    client = OAI_Modbus(serial_num=['20533699424D', '20733699424D', '10733699424D'], debug=False)
+    print(client.get_connected_devices())
     client.connect()
     client.continuously_ao_flag = True
     client.continuously_ai_flag = True
