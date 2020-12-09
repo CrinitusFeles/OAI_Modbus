@@ -69,9 +69,12 @@ class OAI_Modbus(ModbusClient):
             self.debug_print(error)
 
     def disconnect(self):
-        self.modbus_client.close()
-        self.connection_status = False
-        self.debug_print("disconnected")
+        if self.connection_status:
+            self.modbus_client.close()
+            self.connection_status = False
+            self.debug_print("disconnected")
+        else:
+            self.debug_print("device not connected")
 
     def get_connected_devices(self):
         serial_num_list = []
