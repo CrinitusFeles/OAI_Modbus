@@ -72,6 +72,8 @@ and do [Installation](#Installation)
 >Returns:
 >  ``` None```
 
+---
+
 ## Usage
 ```py 
 from oai_modbus import OAI_Modbus
@@ -109,6 +111,8 @@ if __name__ == '__main__':
             test_value += 1
     
 ```
+
+---
 
 ## Dependencies
 Depends on these packages:
