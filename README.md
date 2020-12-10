@@ -77,7 +77,7 @@ and do [Installation](#Installation)
 ## Usage
 ```py 
 from oai_modbus import OAI_Modbus
-
+import time
 
 if __name__ == '__main__':
     client = OAI_Modbus(serial_num=['20733699424D'], debug=True)  # serial_num - rewrites list of serial numbers devices 
