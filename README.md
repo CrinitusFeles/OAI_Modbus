@@ -30,7 +30,7 @@ and do [Installation](#Installation)
 ### OAI_Modbus.disconnect()
 >  
 >Args:
->  None
+>  ```None```
 >
 >Returns:
 >  ``` 0``` - success disconnected.
@@ -43,7 +43,7 @@ and do [Installation](#Installation)
 >  ``` None```
 >
 >Returns:
->  *list*: list consisting ['uart com port', 'serial number']
+>  *[list]*: list consisting ['uart com port', 'serial number']
 
 ### OAI_Modbus.read_regs(target='ai')
 >Reading list ranges of analog input or output register. List ranges need to set in advance.
@@ -52,7 +52,7 @@ and do [Installation](#Installation)
 >  ``` target```- *[str]:* available parameters is *'ai'* - analog inputs or *'ao'* - analog outputs  
 >
 >Returns:
->  *list*: register map of analog inputs or analog autputs 
+>  *[list]*: register map of analog inputs or analog autputs 
 
 ### OAI_Modbus.write_regs()
 >Writing lists of registers. List ranges need to set in advance.
