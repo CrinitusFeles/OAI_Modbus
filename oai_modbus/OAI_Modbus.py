@@ -41,12 +41,13 @@ class OAI_Modbus(ModbusClient):
         if self.debug_print_flag:
             print(string)
 
-    def connect(self):
+    def connect(self, serial_num='2057359A5748'):
         """
         Set connection with device via serial port.
-        :return: 1 - success connection
+        :return: 0 - success connection
                 -1 - failed connection
         """
+        self.serial_numbers.append(serial_num)
         try:
             if self.__get_overlap():
                 self.modbus_client = ModbusClient(method='rtu', port=self.port, baudrate=self.baudrate, parity='N',
@@ -54,7 +55,7 @@ class OAI_Modbus(ModbusClient):
                 if self.modbus_client.connect():
                     self.connection_status = True
                     self.debug_print("success connection")
-                    return 1
+                    return 0
                 else:
                     self.connection_status = False
                     self.debug_print("failed connection")
@@ -68,13 +69,24 @@ class OAI_Modbus(ModbusClient):
         except Exception as error:
             self.debug_print(error)
 
+    def close_all_processes(self):
+        self.continuously_ao_flag = False
+        self.continuously_ai_flag = False
+        self.single_ao_flag = False
+        self.single_ai_flag = False
+        self.queues_survey_flag = False
+        self.continuously_write_flag = False
+
     def disconnect(self):
         if self.connection_status:
+            self.close_all_processes()
             self.modbus_client.close()
             self.connection_status = False
             self.debug_print("disconnected")
+            return 0
         else:
             self.debug_print("device not connected")
+            return -1
 
     def get_connected_devices(self):
         serial_num_list = []
