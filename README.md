@@ -106,6 +106,7 @@ if __name__ == '__main__':
         test_value = 0
         while True:
             client.write_ranges = [[0, [test_value, test_value+1, test_value+2]], [8, [test_value+3, test_value+4]]]
+            client.write_regs()
             time.sleep(1)
             print("ai register_map:", client.ai_register_map[:10])
             print("ao register_map:", client.ao_register_map[:10])
