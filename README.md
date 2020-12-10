@@ -78,9 +78,10 @@ from oai_modbus import OAI_Modbus
 
 
 if __name__ == '__main__':
-    client = OAI_Modbus(debug=True)  # debug - flag for print debug information
+    client = OAI_Modbus(serial_num=['20733699424D'], debug=True)  # serial_num - rewrites list of serial numbers devices 
+                                                                # debug - flag for print debug information
     print(client.get_connected_devices())  # print data about all connected devices
-    client.connect(serial_num='20733699424D')  # try to connect to someone
+    client.connect()  # try to connect to someone
     if client.connection_status:  
         client.continuously_ao_flag = True  # indicate which registers we will read in thread (ai/ao) 
         client.continuously_ai_flag = True
