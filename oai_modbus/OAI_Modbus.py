@@ -176,7 +176,15 @@ class OAI_Modbus(ModbusClient):
 
         return register_map
 
-    def write_regs(self):
+    def write_regs(self, offset, data_list):
+        """
+        Writing lists of registers.
+        :return: None.
+        """
+        self.write_ranges = [offset, data_list]
+        self.__write_regs_ranges()
+
+    def __write_regs_ranges(self):
         """
         Writing lists of registers.
         :return: None.
@@ -206,12 +214,22 @@ class OAI_Modbus(ModbusClient):
     def stop_continuously_ao_reading(self):
         self.continuously_ao_flag = False
 
-    def start_continuously_queue_reading(self):
+    def start_continuously_queue_reading(self, ai, ao, write):
         """
         Start read ao and ai regs in different thread. Before using you should to assign self.queues_survey_flag and
         self.continuously_ai(ao)_flag
         :return: None
         """
+        if len(ai) > 0:
+            self.continuously_ai_flag = True
+            self.ai_read_ranges = ai
+        if len(ao) > 0:
+            self.continuously_ao_flag = True
+            self.ao_read_ranges = ao
+        if len(write) > 0:
+            self.continuously_write_flag = True
+            self.write_ranges = write
+
         self.queues_survey_flag = True
         self.read_thread.start()
 
@@ -239,37 +257,27 @@ class OAI_Modbus(ModbusClient):
             if self.continuously_ai_flag:
                 self.read_regs(target='ai')
             if self.continuously_write_flag:
-                self.write_regs()
+                self.write_regs(self.write_ranges[0], self.write_ranges[1])
                 self.continuously_write_flag = False
 
 
 if __name__ == '__main__':
-    client = OAI_Modbus(serial_num=['20533699424D', '20733699424D', '10733699424D'], debug=False)
+    client = OAI_Modbus(serial_num=['20733699424D', '10733699424D'], debug=True)
     print(client.get_connected_devices())
     client.connect()
-    client.continuously_ao_flag = True
-    client.continuously_ai_flag = True
-    client.single_ao_flag = False
-    client.single_ai_flag = False
     test_mode = True  # for debug
-
-    client.ao_register_map = [0] * 10 ** 4
-    client.ai_register_map = [0] * 10 ** 4
-    client.ao_read_ranges = [[0, 3], [12, 13], [216, 925]]
-    client.ai_read_ranges = [[0, 3], [5, 12]]  # [start address (included); stop address (not included)]
-    client.write_ranges = [[0, [3, 5, 7, 2]], [8, [12, 2, 5, 7, 0, 1, 5, 7, 889, 33, 332, 2, 4, 5]]]
 
     if client.connection_status:
         if test_mode:
             # ---- test write -----
             print("before write:", client.read_regs(target='ao'))
-            client.write_regs()
+            client.write_regs(0, [3, 5, 7, 2])
             print("after write:", client.read_regs(target='ao'))
             # ---------------------
         else:
-            client.start_continuously_queue_reading()
+            client.start_continuously_queue_reading(ai=[[0, 3], [12, 12]], ao=[[0, 8], [12, 15]], write=[])
             time.sleep(5)
-            client.write_regs()
+            client.write_regs(0, [1, 2, 3, 4, 5])
             time.sleep(5)
             client.queues_survey_flag = False
         print("ai register_map:", client.ai_register_map[:1000])
