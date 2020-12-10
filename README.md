@@ -64,7 +64,8 @@ and do [Installation](#Installation)
 >  ``` None```
 
 ### OAI_Modbus.start_continuously_queue_reading()
->Starts read *'ao'* and *'ai'* regs in different thread. Before using you should to assign ``` self.queues_survey_flag``` and ``` self.continuously_ai(ao)_flag ```
+>Starts read *'ao'* and *'ai'* regs in different thread. Before using you should to assign ``` self.queues_survey_flag``` and 
+```self.continuously_ai(ao)_flag```. For get reading result use *ai(ao)_register_map*.
 >
 >Args:
 >  ``` None```
