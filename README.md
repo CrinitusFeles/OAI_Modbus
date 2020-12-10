@@ -17,7 +17,7 @@ and do [Installation](#Installation)
 ---
 
 ## Documentation
-###OAI_Modbus.connect()
+### OAI_Modbus.connect()
 > Set connection with device
 >Args:
 >  ```sh serial_num```- *[str]*: string of device's serial number.
@@ -25,7 +25,7 @@ and do [Installation](#Installation)
 >  ```sh 0``` - success connection.
 > ```sh -1``` - connection issues.
 
-###OAI_Modbus.disconnect()
+### OAI_Modbus.disconnect()
 >  
 >Args:
 >  None
@@ -33,14 +33,14 @@ and do [Installation](#Installation)
 >  ```sh 0``` - success disconnected.
 > ```sh -1``` - device was not connected.
 
-###OAI_Modbus.get_connected_devices()
+### OAI_Modbus.get_connected_devices()
 > Returns all connected devices.
 >Args:
 >  ```sh None```
 >Returns:
 >  *list*: list consisting ['uart com port', 'serial number']
 
-###OAI_Modbus.read_regs(target='ai')
+### OAI_Modbus.read_regs(target='ai')
 >Reading list ranges of analog input or output register. List ranges need to set in advance.
 >
 >Args:
@@ -48,7 +48,7 @@ and do [Installation](#Installation)
 >Returns:
 >  *list*: register map of analog inputs or analog autputs 
 
-###OAI_Modbus.write_regs()
+### OAI_Modbus.write_regs()
 >Writing lists of registers. List ranges need to set in advance.
 >
 >Args:
@@ -56,7 +56,7 @@ and do [Installation](#Installation)
 >Returns:
 >  ```sh None```
 
-###OAI_Modbus.start_continuously_queue_reading()
+### OAI_Modbus.start_continuously_queue_reading()
 >Starts read *'ao'* and *'ai'* regs in different thread. Before using you should to assign ```sh self.queues_survey_flag``` and ```sh self.continuously_ai(ao)_flag ```
 >
 >Args:
@@ -64,7 +64,7 @@ and do [Installation](#Installation)
 >Returns:
 >  ```sh None```
 
-##Usage
+## Usage
 ```py 
 from oai_modbus import OAI_Modbus
 
