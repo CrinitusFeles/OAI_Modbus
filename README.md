@@ -17,8 +17,8 @@ and do [Installation](#Installation)
 ---
 
 ## Documentation
-### OAI_Modbus.connect()
-> Set connection with device
+### OAI_Modbus.connect(serial_num='')
+> Set connection with device. *serial_num* appends serial number to list of all serial numbers 
 >
 >Args:
 >  ``` serial_num```- *[str]*: string of device's serial number.
