@@ -19,8 +19,10 @@ and do [Installation](#Installation)
 ## Documentation
 ### OAI_Modbus.connect()
 > Set connection with device
+>
 >Args:
 >  ``` serial_num```- *[str]*: string of device's serial number.
+>
 >Returns:
 >  ``` 0``` - success connection.
 > ``` -1``` - connection issues.
@@ -29,14 +31,17 @@ and do [Installation](#Installation)
 >  
 >Args:
 >  None
+>
 >Returns:
 >  ``` 0``` - success disconnected.
 > ``` -1``` - device was not connected.
 
 ### OAI_Modbus.get_connected_devices()
 > Returns all connected devices.
+>
 >Args:
 >  ``` None```
+>
 >Returns:
 >  *list*: list consisting ['uart com port', 'serial number']
 
@@ -45,6 +50,7 @@ and do [Installation](#Installation)
 >
 >Args:
 >  ``` target```- *[str]:* available parameters is *'ai'* - analog inputs or *'ao'* - analog outputs  
+>
 >Returns:
 >  *list*: register map of analog inputs or analog autputs 
 
@@ -53,6 +59,7 @@ and do [Installation](#Installation)
 >
 >Args:
 >  ``` None```
+>
 >Returns:
 >  ``` None```
 
@@ -61,6 +68,7 @@ and do [Installation](#Installation)
 >
 >Args:
 >  ``` None```
+>
 >Returns:
 >  ``` None```
 
