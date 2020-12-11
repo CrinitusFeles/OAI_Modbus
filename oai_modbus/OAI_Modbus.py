@@ -186,7 +186,6 @@ class OAI_Modbus(ModbusClient):
         :return: None.
         """
         self.write_ranges = [[offset, data_list]]
-        print("write ranges: ", self.write_ranges)
         self.__write_regs_ranges()
 
     def __write_regs_ranges(self):
@@ -276,7 +275,6 @@ if __name__ == '__main__':
     if client.connection_status:
         if test_mode:
             # ---- test write -----
-            # client.ao_read_ranges = [[0, 5]]
             print("before write:", client.read_regs(target='ao', read_ranges=[[0, 3]]))
             client.write_regs(offset=0, data_list=[1, 2, 3, 4, 5])
             print("after write:", client.read_regs(target='ao', read_ranges=[[0, 3]]))
