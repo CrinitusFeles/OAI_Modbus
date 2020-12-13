@@ -25,8 +25,9 @@ class OAI_Modbus(ModbusClient):
         self.ao_read_ranges = [[]]
         self.ai_read_ranges = [[]]  # [start address (included); stop address (not included)]
         self.write_ranges = [[[]]]
-        self.prev_write_ranges =[[[]]]  # internal variable for fix infinite byte swapping
+        self.prev_write_ranges = [[[]]]  # internal variable for fix infinite byte swapping
         self.reverse_bytes_flag = True
+        self.time_sleep = kwargs.get('time_sleep', 0.03)
 
         # thread flags
         self.continuously_ao_flag = False
@@ -271,6 +272,7 @@ class OAI_Modbus(ModbusClient):
             if self.continuously_write_flag:
                 self.write_regs(self.write_ranges[0], self.write_ranges[1])
                 self.continuously_write_flag = False
+            time.sleep(self.time_sleep)
 
 
 if __name__ == '__main__':
