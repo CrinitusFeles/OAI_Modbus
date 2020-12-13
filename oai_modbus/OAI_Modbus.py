@@ -25,8 +25,7 @@ class OAI_Modbus(ModbusClient):
         self.ao_read_ranges = [[]]
         self.ai_read_ranges = [[]]  # [start address (included); stop address (not included)]
         self.write_ranges = [[[]]]
-        self.prev_write_ranges = [[[]]]  # internal variable for fix infinite byte swapping
-        self.reverse_bytes_flag = True
+        self.reverse_bytes_flag = kwargs.get('reverse_bytes', True)
         self.time_sleep = kwargs.get('time_sleep', 0.03)
 
         # thread flags
@@ -62,7 +61,7 @@ class OAI_Modbus(ModbusClient):
                     if self.modbus_client.connect():
                         self.connection_status = True
                         self.debug_print("success connection")
-                        return 0
+                        return 1
                     else:
                         self.connection_status = False
                         self.debug_print("failed connection")
@@ -176,6 +175,7 @@ class OAI_Modbus(ModbusClient):
                         else:
                             last_read_range.extend(register_list.registers)
                     except Exception as error:
+                        self.debug_print("read error")
                         self.debug_print(error)
 
                 for i in range(read_ranges[k][1] - read_ranges[k][0]):
@@ -200,23 +200,21 @@ class OAI_Modbus(ModbusClient):
         :return: None.
         """
         with self.lock:
-            if self.prev_write_ranges == self.write_ranges:
-                if self.reverse_bytes_flag:
-                    buf_reg = []
+            if self.reverse_bytes_flag:
+                buf_reg = []
+                buf = []
+                for j in self.write_ranges:
+                    for k in j[1]:
+                        buf.append((k >> 8) | ((k & 0xFF) << 8))
+                    buf_reg.append([j[0], buf])
                     buf = []
-                    for j in self.write_ranges:
-                        for k in j[1]:
-                            buf.append((k >> 8) | ((k & 0xFF) << 8))
-                        buf_reg.append([j[0], buf])
-                        buf = []
-                    self.write_ranges = buf_reg
-                    self.prev_write_ranges = self.write_ranges
+                self.write_ranges = buf_reg
 
             for k in range(len(self.write_ranges)):
                 for i in range(0, len(self.write_ranges[k][1]), 10):
                     try:
-                        self.modbus_client.write_registers(self.write_ranges[k][0] + i, self.write_ranges[k][1][i: i + 10],
-                                                           unit=1)
+                        self.modbus_client.write_registers(self.write_ranges[k][0] + i,
+                                                           self.write_ranges[k][1][i: i + 10], unit=1)
                     except Exception as error:
                         self.debug_print(error)
 
