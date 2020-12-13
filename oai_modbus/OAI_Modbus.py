@@ -25,6 +25,7 @@ class OAI_Modbus(ModbusClient):
         self.ao_read_ranges = [[]]
         self.ai_read_ranges = [[]]  # [start address (included); stop address (not included)]
         self.write_ranges = [[[]]]
+        self.prev_write_ranges =[[[]]]  # internal variable for fix infinite byte swapping
         self.reverse_bytes_flag = True
 
         # thread flags
@@ -46,29 +47,33 @@ class OAI_Modbus(ModbusClient):
         Set connection with device via serial port.
         :param: serial_num - str of serial number which will be appended to list of all serial numbers
         :return: 0 - success connection
+                 1 - device already connected
                 -1 - failed connection
         """
         self.serial_numbers.append(serial_num)
-        try:
-            if self.__get_overlap():
-                self.modbus_client = ModbusClient(method='rtu', port=self.port, baudrate=self.baudrate, parity='N',
-                                                  timeout=self.timeout)
-                if self.modbus_client.connect():
-                    self.connection_status = True
-                    self.debug_print("success connection")
-                    return 0
+        if self.connection_status:
+            return 1
+        else:
+            try:
+                if self.__get_overlap():
+                    self.modbus_client = ModbusClient(method='rtu', port=self.port, baudrate=self.baudrate, parity='N',
+                                                      timeout=self.timeout)
+                    if self.modbus_client.connect():
+                        self.connection_status = True
+                        self.debug_print("success connection")
+                        return 0
+                    else:
+                        self.connection_status = False
+                        self.debug_print("failed connection")
+                        return -1
                 else:
+                    self.debug_print(self.get_connected_devices())
                     self.connection_status = False
-                    self.debug_print("failed connection")
+                    self.debug_print("ERROR: devices not detected")
                     return -1
-            else:
-                self.debug_print(self.get_connected_devices())
-                self.connection_status = False
-                self.debug_print("ERROR: devices not detected")
-                return -1
 
-        except Exception as error:
-            self.debug_print(error)
+            except Exception as error:
+                self.debug_print(error)
 
     def close_all_processes(self):
         self.continuously_ao_flag = False
@@ -186,23 +191,25 @@ class OAI_Modbus(ModbusClient):
         :return: None.
         """
         self.write_ranges = [[offset, data_list]]
-        self.__write_regs_ranges()
+        self.write_regs_ranges()
 
-    def __write_regs_ranges(self):
+    def write_regs_ranges(self):
         """
         Writing lists of registers.
         :return: None.
         """
         with self.lock:
-            if self.reverse_bytes_flag:
-                buf_reg = []
-                buf = []
-                for j in self.write_ranges:
-                    for k in j[1]:
-                        buf.append((k >> 8) | ((k & 0xFF) << 8))
-                    buf_reg.append([j[0], buf])
+            if self.prev_write_ranges == self.write_ranges:
+                if self.reverse_bytes_flag:
+                    buf_reg = []
                     buf = []
-                self.write_ranges = buf_reg
+                    for j in self.write_ranges:
+                        for k in j[1]:
+                            buf.append((k >> 8) | ((k & 0xFF) << 8))
+                        buf_reg.append([j[0], buf])
+                        buf = []
+                    self.write_ranges = buf_reg
+                    self.prev_write_ranges = self.write_ranges
 
             for k in range(len(self.write_ranges)):
                 for i in range(0, len(self.write_ranges[k][1]), 10):
