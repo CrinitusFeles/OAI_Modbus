@@ -49,8 +49,8 @@ and do [Installation](#Installation)
 >Reading list ranges of analog input or output register. List ranges need to set in advance.
 >
 >Args:
->  ``` target```- *[str]:* available parameters is *'ai'* - analog inputs or *'ao'* - analog outputs  
->  ``` read_ranges```- *[list]:* list of ranges that will be read 
+>  ``` target```- *[str]:* available parameters is *'ai'* - analog inputs or *'ao'* - analog outputs.
+>  ``` read_ranges```- *[list]:* list of ranges that will be read .
 >
 >Returns:
 >  *[list]*: register map of analog inputs or analog autputs 
@@ -59,7 +59,7 @@ and do [Installation](#Installation)
 >Writing lists of registers. List ranges need to set in advance.
 >
 >Args:
->  ``` offset```- *[int]:* address where will be written the first byte from ```data_list```
+>  ``` offset```- *[int]:* address where will be written the first byte from ```data_list```.
 >  ``` data_list```- *[list]:* 
 >
 >Returns:
@@ -69,9 +69,9 @@ and do [Installation](#Installation)
 >Starts read *'ao'* and *'ai'* regs in different thread. If parameter is empty list the thread will not be read it. 
 >
 >Args:
->  ``` ai```- *[list]:* list of addresses ranges of analog inputs
->  ``` ao```- *[list]:* list of addresses ranges of analog outputs
->  ``` write```- *[list]:* write ranges in format [offset, [data_list]]
+>  ``` ai```- *[list]:* list of addresses ranges of analog inputs.
+>  ``` ao```- *[list]:* list of addresses ranges of analog outputs.
+>  ``` write```- *[list]:* write ranges in format [offset, [data_list]].
 >
 >Returns:
 >  ``` None```
