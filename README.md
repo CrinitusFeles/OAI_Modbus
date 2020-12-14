@@ -24,7 +24,7 @@ and do [Installation](#Installation)
 >  ``` serial_num```- *[str]*: string of device's serial number.
 >
 >Returns:
->  ``` 0``` - success connection.
+>  ``` 1``` - success connection.
 > ``` -1``` - connection issues.
 
 ### OAI_Modbus.disconnect()
@@ -45,30 +45,33 @@ and do [Installation](#Installation)
 >Returns:
 >  *[list]*: list consisting ['uart com port', 'serial number']
 
-### OAI_Modbus.read_regs(target='ai')
+### OAI_Modbus.read_regs(target='ai', read_ranges=None)
 >Reading list ranges of analog input or output register. List ranges need to set in advance.
 >
 >Args:
 >  ``` target```- *[str]:* available parameters is *'ai'* - analog inputs or *'ao'* - analog outputs  
+>  ``` read_ranges```- *[list]:* list of ranges that will be read 
 >
 >Returns:
 >  *[list]*: register map of analog inputs or analog autputs 
 
-### OAI_Modbus.write_regs()
+### OAI_Modbus.write_regs(offset, data_list)
 >Writing lists of registers. List ranges need to set in advance.
 >
 >Args:
->  ``` None```
+>  ``` offset```- *[int]:* address where will be written the first byte from ```data_list```
+>  ``` data_list```- *[list]:* 
 >
 >Returns:
 >  ``` None```
 
-### OAI_Modbus.start_continuously_queue_reading()
->Starts read *'ao'* and *'ai'* regs in different thread. Before using you should to assign ``` self.queues_survey_flag``` and 
-```self.continuously_ai(ao)_flag```. For get reading result use ```self.ai_register_map``` or ```self.ao_register_map```.
+### OAI_Modbus.start_continuously_queue_reading(ai=None, ao=None, write=None)
+>Starts read *'ao'* and *'ai'* regs in different thread. If parameter is empty list the thread will not be read it. 
 >
 >Args:
->  ``` None```
+>  ``` ai```- *[list]:* list of addresses ranges of analog inputs
+>  ``` ao```- *[list]:* list of addresses ranges of analog outputs
+>  ``` write```- *[list]:* write ranges in format [offset, [data_list]]
 >
 >Returns:
 >  ``` None```
@@ -81,36 +84,32 @@ from oai_modbus import OAI_Modbus
 import time
 
 if __name__ == '__main__':
-    client = OAI_Modbus(serial_num=['20733699424D'], debug=True)  # serial_num - rewrites list of serial numbers devices 
-                                                                # debug - flag for print debug information
-    print(client.get_connected_devices())  # print data about all connected devices
-    client.connect()  # try to connect to someone
-    if client.connection_status:  
-        client.continuously_ao_flag = True  # indicate which registers we will read in thread (ai/ao) 
-        client.continuously_ai_flag = True
-        client.single_ao_flag = False   # if you need to read registers just one time you should use this flags
-        client.single_ai_flag = False
+    client = OAI_Modbus(serial_num=['20733699424D', '20703699424D'], debug=False)
+    print(client.get_connected_devices())
+    client.connect()
+    test_mode = True  # for debug
 
-        client.ao_read_ranges = [[0, 3], [12, 13], [216, 925]]  # [start address (included); stop address (not included)]
-        client.ai_read_ranges = [[0, 3], [5, 12]] 
-        
-        # [start address, [data to write]], [next start address, [data to write]]
-        client.write_ranges = [[0, [3, 5, 7, 2]], [8, [12, 2, 5, 7, 0, 1, 5, 7, 889, 33, 332, 2, 4, 5]]]  
-        
-        print("before write:", client.read_regs(target='ao')[0:100])  # you can write only in analog outputs registers
-        client.write_regs()
-        print("after write:", client.read_regs(target='ao')[0:100])   
-        
-        client.start_continuously_queue_reading()  # start read in thread 
-        
-        test_value = 0
-        while True:
-            client.write_ranges = [[0, [test_value, test_value+1, test_value+2]], [8, [test_value+3, test_value+4]]]
-            client.write_regs()
+    if client.connection_status:
+        if test_mode:
+            # ---- test write -----
+            print("before write:", client.read_regs(target='ao', read_ranges=[[0, 3]]))
+            client.write_regs(offset=0, data_list=[1, 2, 3, 4, 5])
+            print("after write:", client.read_regs(target='ao', read_ranges=[[0, 3]]))
+            # ---------------------
+        else:
+            client.start_continuously_queue_reading(ai=[[0, 3], [12, 14]], ao=[[0, 8], [12, 15]], write=[])
             time.sleep(1)
-            print("ai register_map:", client.ai_register_map[:10])
-            print("ao register_map:", client.ao_register_map[:10])
-            test_value += 1
+            val = 0
+            while True:
+                client.write_regs(offset=0, data_list=[val, val+1, val+2, val+3])
+                time.sleep(1)
+                # client.queues_survey_flag = False
+                print("ai register_map:", client.ai_register_map[:5])
+                print("ao register_map:", client.ao_register_map[:5])
+                val += 1
+
+    else:
+        print("connection issues")
     
 ```
 
