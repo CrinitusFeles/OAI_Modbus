@@ -90,7 +90,7 @@ if __name__ == '__main__':
     client = OAI_Modbus(serial_num=['20733699424D', '20703699424D'], debug=False)
     print(client.get_connected_devices())
     client.connect()
-    test_mode = True  # for debug
+    test_mode = False  # for debug
 
     if client.connection_status:
         if test_mode:
