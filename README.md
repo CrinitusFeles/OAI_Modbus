@@ -80,7 +80,10 @@ and do [Installation](#Installation)
 
 ## Usage
 ```py 
-from oai_modbus import OAI_Modbus
+try:
+    from oai_modbus import OAI_Modbus
+except ImportError:
+    print("use github installer")
 import time
 
 if __name__ == '__main__':
