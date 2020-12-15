@@ -87,7 +87,7 @@ except ImportError:
 import time
 
 if __name__ == '__main__':
-    client = OAI_Modbus(serial_num=['20733699424D', '20703699424D'], debug=False)
+    client = OAI_Modbus(serial_num=['20733699424D', '20703699424D'], debug=True)
     print(client.get_connected_devices())
     client.connect()
     test_mode = False  # for debug
