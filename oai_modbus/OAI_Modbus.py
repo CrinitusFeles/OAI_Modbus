@@ -13,6 +13,7 @@ class OAI_Modbus(ModbusClient):
         self.timeout = 1
         self.port = ''
         self.connection_status = False
+        self.no_answer_counter = 0
 
         self.modbus_client = None
         self.debug_print_flag = kwargs.get('debug', True)
@@ -57,7 +58,7 @@ class OAI_Modbus(ModbusClient):
             try:
                 if self.__get_overlap():
                     self.modbus_client = ModbusClient(method='rtu', port=self.port, baudrate=self.baudrate, parity='N',
-                                                      timeout=self.timeout)
+                                                      timeout=self.timeout, write_timeout=2)
                     if self.modbus_client.connect():
                         self.connection_status = True
                         self.debug_print("success connection")
@@ -177,12 +178,15 @@ class OAI_Modbus(ModbusClient):
                     except Exception as error:
                         self.debug_print("read error")
                         self.debug_print(error)
-
-                for i in range(read_ranges[k][1] - read_ranges[k][0]):
-                    register_map[read_ranges[k][0] + i] = last_read_range[i]
+                try:
+                    for i in range(read_ranges[k][1] - read_ranges[k][0]):
+                        register_map[read_ranges[k][0] + i] = last_read_range[i]
+                except Exception as error:
+                    self.no_answer_counter += 1
+                    self.debug_print("Modbus read timeout error")
                 # print(print_string, " range[", k, "]: ", last_read_range)
 
-        return register_map
+        return register_map[read_ranges[0]:read_ranges[-1]]
 
     def write_regs(self, offset, data_list):
         """
@@ -213,9 +217,14 @@ class OAI_Modbus(ModbusClient):
             for k in range(len(self.write_ranges)):
                 for i in range(0, len(self.write_ranges[k][1]), 10):
                     try:
-                        self.modbus_client.write_registers(self.write_ranges[k][0] + i,
+                        answer = self.modbus_client.write_registers(self.write_ranges[k][0] + i,
                                                            self.write_ranges[k][1][i: i + 10], unit=1)
+
+                        if answer.address != self.write_ranges[k][0]:
+                            self.no_answer_counter += 1
+                            self.debug_print("Modbus write timeout error")
                     except Exception as error:
+                        self.no_answer_counter += 1
                         self.debug_print(error)
 
     def stop_continuously_ai_reading(self):
@@ -241,8 +250,11 @@ class OAI_Modbus(ModbusClient):
             self.continuously_write_flag = True
             self.write_ranges = write
 
-        self.queues_survey_flag = True
-        self.read_thread.start()
+        if self.read_thread.is_alive():
+            pass
+        else:
+            self.queues_survey_flag = True
+            self.read_thread.start()
 
         if not self.read_thread.is_alive():
             self.queues_survey_flag = False
@@ -274,7 +286,7 @@ class OAI_Modbus(ModbusClient):
 
 
 if __name__ == '__main__':
-    client = OAI_Modbus(serial_num=['20733699424D', '20703699424D'], debug=False)
+    client = OAI_Modbus(serial_num=['20733699424D', '20703699424D'], debug=True)
     print(client.get_connected_devices())
     client.connect()
     test_mode = True  # for debug
@@ -282,19 +294,21 @@ if __name__ == '__main__':
     if client.connection_status:
         if test_mode:
             # ---- test write -----
-            print("before write:", client.read_regs(target='ao', read_ranges=[[0, 3]]))
+            print("before write:", client.read_regs(target='ao', read_ranges=[[0, 5]])[0:5])
             client.write_regs(offset=0, data_list=[1, 2, 3, 4, 5])
-            print("after write:", client.read_regs(target='ao', read_ranges=[[0, 3]]))
+            print("after write:", client.read_regs(target='ao', read_ranges=[[0, 5]])[0:5])
             # ---------------------
         else:
             client.start_continuously_queue_reading(ai=[[0, 3], [12, 14]], ao=[[0, 8], [12, 15]], write=[])
             time.sleep(1)
+            val = 0
             while True:
-                client.write_regs(offset=0, data_list=[1, 2, 3, 4, 5])
+                client.write_regs(offset=0, data_list=[val, val+1, val+2, val+3])
                 time.sleep(1)
                 # client.queues_survey_flag = False
-                print("ai register_map:", client.ai_register_map[:1000])
-                print("ao register_map:", client.ao_register_map[:1000])
+                print("ai register_map:", client.ai_register_map[:5])
+                print("ao register_map:", client.ao_register_map[:5])
+                val += 1
 
     else:
         print("connection issues")
