@@ -16,7 +16,7 @@ It will create folder _'your-package-name'_ which will consist:
 
 4) After that you have to open __init__.py file and add all dependencies. Example of __init__.py:
 ```py
-\__version__ = '0.1.1'  
+__version__ = '0.1.1'  
 
   from .OAI_Modbus import OAI_Modbus
 ```
