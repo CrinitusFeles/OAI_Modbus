@@ -47,7 +47,7 @@ class OAI_Modbus(ModbusClient):
         """
         Set connection with device via serial port.
         :param: serial_num - str of serial number which will be appended to list of all serial numbers
-        :return: 0 - success connection
+        :return: 1 - success connection
                  1 - device already connected
                 -1 - failed connection
         """
@@ -186,7 +186,8 @@ class OAI_Modbus(ModbusClient):
                     self.debug_print("Modbus read timeout error")
                 # print(print_string, " range[", k, "]: ", last_read_range)
 
-        return register_map[read_ranges[0]:read_ranges[-1]]
+        slice_register_map = [register_map[r[0]:r[-1]] for r in read_ranges]
+        return slice_register_map
 
     def write_regs(self, offset, data_list):
         """
@@ -286,7 +287,7 @@ class OAI_Modbus(ModbusClient):
 
 
 if __name__ == '__main__':
-    client = OAI_Modbus(serial_num=['20733699424D', '20703699424D'], debug=True)
+    client = OAI_Modbus(serial_num=['20703699424D', '20703699424D'], debug=True)
     print(client.get_connected_devices())
     client.connect()
     test_mode = True  # for debug
