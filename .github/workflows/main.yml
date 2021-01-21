@@ -15,26 +15,39 @@ jobs:
     steps:
       - name: Checkout code
         uses: actions/checkout@v2
-      - name: Build project # This would actually build your project, using zip for an example artifact
-        run: |
-          zip --junk-paths ./dist/oai_modbus README.md
+      - name: Getting Poetry
+        uses: dschep/install-poetry-action@v1.3
+      - name: Create Release
+      - name: Installing dependencies
+        run: poetry install
+      - name: Getting package version
+        id: get_version
+        run: echo "::set-output name=version::$(poetry version)"
+      - name: Getting package clear version
+        id: get_clear_version
+        run: echo "::set-output name=clear_version::$(poetry version | cut -d ' ' -f 2)"
+      - name: Get asset name
+        id: get_asset_name
+        run: echo "::set-output name=assert_name::$(ls dist | grep gz)"
+      
       - name: Create Release
         id: create_release
-        uses: actions/create-release@v1
+        uses: actions/create-release@latest
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
-          tag_name: ${{ github.ref }}
-          release_name: Release ${{ github.ref }}
+          tag_name: ${{ steps.get_clear_version.outputs.clear_version }}
+          release_name: ${{ steps.get_version.outputs.version }}
           draft: false
           prerelease: false
-      - name: Test Upload Release Asset
-        id: upload-release-asset 
-        uses: actions/upload-release-asset@v1
+
+      - name: Upload Release assets
+        id: upload_gz
+        uses: actions/upload-release-asset@latest
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
-          upload_url: ${{ steps.create_release.outputs.upload_url }} # This pulls from the CREATE RELEASE step above, referencing it's ID to get its outputs object, which include a `upload_url`. See this blog post for more info: https://jasonet.co/posts/new-features-of-github-actions/#passing-data-to-future-steps 
-          asset_path: ./dist/oai_modbus.zip
-          asset_name: oai_modbus.zip
-          asset_content_type: application/zip
+          upload_url: ${{ steps.create_release.outputs.upload_url }}
+          asset_path: dist/${{ steps.get_asset_name.outputs.assert_name }}
+          asset_name: ${{ steps.get_asset_name.outputs.assert_name }}
+          asset_content_type: application/tar+gzip
