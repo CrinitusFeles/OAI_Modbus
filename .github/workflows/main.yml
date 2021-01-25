@@ -11,7 +11,7 @@ name: Test Upload Release Asset
 jobs:
   release:
     name: Upload Release Asset
-    runs-on: ubuntu-latest
+    runs-on: windows-latest
     steps:
       - name: Getting code
         uses: actions/checkout@master
@@ -24,8 +24,7 @@ jobs:
           key: ${{ runner.os }}-pip-${{ hashFiles('poetry.lock') }}
           restore-keys: |
             ${{ runner.os }}-pip-
-      - name: Installing dependencies
-        run: poetry install
+
       - name: Getting package version
         id: get_version
         run: echo "::set-output name=version::$(poetry version)"
