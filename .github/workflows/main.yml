@@ -19,13 +19,13 @@ jobs:
         poetry-version: 1.1.4
     - name: Configure poetry
       shell: bash
+      run: python -m poetry config virtualenvs.in-project true
     
     - name: Build project # This would actually build your project, using zip for an example artifact
       run: poetry build
     - name: Check folder
       run: ls
-    - name: Config environment
-      run: python -m poetry config virtualenvs.in-project true
+
     - name: View poetry version
       run: poetry --version
     - name: Install dependencies
