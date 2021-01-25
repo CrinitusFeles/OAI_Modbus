@@ -37,26 +37,7 @@ jobs:
       run: |
         python -m poetry install
     
-  Release:
-    needs: Quality
-    # https://github.community/t/how-do-i-specify-job-dependency-running-in-another-workflow/16482
-    if: github.event_name == 'push' && github.ref == 'refs/heads/master' && !contains(github.event.head_commit.message, 'chore(release):')
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/setup-python@v2
-        with:
-          python-version: 3.8
-      - name: Checkout code
-        uses: actions/checkout@v2
-      - name: Semantic Release
-        run: |
-          pip install python-semantic-release
-          git config user.name github-actions
-          git config user.email github-actions@github.com
-          semantic-release publish
-      
-
-      - name: Create Release
+          - name: Create Release
         id: create_release
         uses: actions/create-release@v1
         env:
@@ -76,3 +57,5 @@ jobs:
           asset_path: ./dist/OAI_ModBus-0.1.1.tar.gz
           asset_name: OAI_ModBus-0.1.1.tar.gz
           asset_content_type: application/x-tar
+
+
