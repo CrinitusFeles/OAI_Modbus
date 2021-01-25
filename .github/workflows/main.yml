@@ -19,6 +19,10 @@ jobs:
         poetry-version: 1.1.4
     - name: Configure poetry
       shell: bash
+    
+    - name: Build project # This would actually build your project, using zip for an example artifact
+      run: |
+        poetry build
       run: python -m poetry config virtualenvs.in-project true
     - name: View poetry version
       run: poetry --version
@@ -45,9 +49,6 @@ jobs:
           semantic-release publish
       
 
-      - name: Build project # This would actually build your project, using zip for an example artifact
-        run: |
-          poetry build
       - name: Create Release
         id: create_release
         uses: actions/create-release@v1
