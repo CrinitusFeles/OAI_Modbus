@@ -1,58 +1,45 @@
+name: CI
 on:
   push:
-    # Sequence of patterns matched against refs/tags
-    branches:
-      - master
-    tags:
-    - 'v.*' # Push events to matching v*, i.e. v1.0, v20.15.10
-
-name: Test Upload Release Asset
+    branches: [ master ]
+  pull_request:
+    branches: [ master ]
 
 jobs:
-  release:
-    name: Upload Release Asset
-    runs-on: windows-latest
+  Quality:
+    runs-on: ubuntu-latest
     steps:
-      - name: Getting code
-        uses: actions/checkout@master
-      - name: Getting Poetry
-        uses: abatilo/actions-poetry@v2.0.0
-      - name: Cache pip
-        uses: actions/cache@v2
+    - uses: actions/checkout@v2
+    - uses: actions/setup-python@v2
+      with:
+        python-version: 3.8
+    - name: Install Python Poetry
+      uses: abatilo/actions-poetry@v2.1.0
+      with:
+        poetry-version: 1.1.4
+    - name: Configure poetry
+      shell: bash
+      run: python -m poetry config virtualenvs.in-project true
+    - name: View poetry version
+      run: poetry --version
+    - name: Install dependencies
+      run: |
+        python -m poetry install
+    
+  Release:
+    needs: Quality
+    # https://github.community/t/how-do-i-specify-job-dependency-running-in-another-workflow/16482
+    if: github.event_name == 'push' && github.ref == 'refs/heads/master' && !contains(github.event.head_commit.message, 'chore(release):')
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/setup-python@v2
         with:
-          path: ~/.cache/pip
-          key: ${{ runner.os }}-pip-${{ hashFiles('poetry.lock') }}
-          restore-keys: |
-            ${{ runner.os }}-pip-
-
-      - name: Getting package version
-        id: get_version
-        run: echo "::set-output name=version::$(poetry version)"
-      - name: Getting package clear version
-        id: get_clear_version
-        run: echo "::set-output name=clear_version::$(poetry version | cut -d ' ' -f 2)"
-      - name: Get asset name
-        id: get_asset_name
-        run: echo "::set-output name=assert_name::$(ls dist | grep gz)"
-      
-      - name: Create Release
-        id: create_release
-        uses: actions/create-release@latest
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        with:
-          tag_name: ${{ steps.get_clear_version.outputs.clear_version }}
-          release_name: ${{ steps.get_version.outputs.version }}
-          draft: false
-          prerelease: false
-
-      - name: Upload Release assets
-        id: upload_gz
-        uses: actions/upload-release-asset@latest
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        with:
-          upload_url: ${{ steps.create_release.outputs.upload_url }}
-          asset_path: dist/${{ steps.get_asset_name.outputs.assert_name }}
-          asset_name: ${{ steps.get_asset_name.outputs.assert_name }}
-          asset_content_type: application/tar+gzip
+          python-version: 3.8
+      - name: Checkout code
+        uses: actions/checkout@v2
+      - name: Semantic Release
+        run: |
+          pip install python-semantic-release
+          git config user.name github-actions
+          git config user.email github-actions@github.com
+          semantic-release publish

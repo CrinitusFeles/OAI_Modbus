@@ -1,4 +1,6 @@
 .idea
+.actrc
+act
 dist
 tests
 poetry.lock
