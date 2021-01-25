@@ -16,7 +16,7 @@ jobs:
       - name: Getting code
         uses: actions/checkout@master
       - name: Getting Poetry
-        uses: dschep/install-poetry-action@v1.3
+        uses: abatilo/actions-poetry@v2.0.0
       - name: Cache pip
         uses: actions/cache@v2
         with:
