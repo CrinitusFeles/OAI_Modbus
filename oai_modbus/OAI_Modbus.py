@@ -37,7 +37,7 @@ class OAI_Modbus(ModbusClient):
         self.queues_survey_flag = False
         self.continuously_write_flag = False
 
-        self.read_thread = threading.Thread(name='queue', target=self.__queue_continuously_survey, daemon=True)
+        self.read_thread = None
 
     def debug_print(self, string):
         if self.debug_print_flag:
@@ -61,6 +61,7 @@ class OAI_Modbus(ModbusClient):
                                                       timeout=self.timeout, write_timeout=2)
                     if self.modbus_client.connect():
                         self.connection_status = True
+                        self.read_thread = threading.Thread(name='queue', target=self.queue_continuously_survey, daemon=True)
                         self.debug_print("success connection")
                         return 1
                     else:
@@ -68,7 +69,7 @@ class OAI_Modbus(ModbusClient):
                         self.debug_print("failed connection")
                         return -1
                 else:
-                    self.debug_print(self.get_connected_devices())
+                    self.debug_print("connected devices: ", self.get_connected_devices())
                     self.connection_status = False
                     self.debug_print("ERROR: devices not detected")
                     return -1
@@ -83,12 +84,13 @@ class OAI_Modbus(ModbusClient):
         self.single_ai_flag = False
         self.queues_survey_flag = False
         self.continuously_write_flag = False
+        self.modbus_client.close()
+        self.connection_status = False
+        self.read_thread = None
 
     def disconnect(self):
         if self.connection_status:
             self.close_all_processes()
-            self.modbus_client.close()
-            self.connection_status = False
             self.debug_print("disconnected")
             return 0
         else:
@@ -127,7 +129,7 @@ class OAI_Modbus(ModbusClient):
                             return True
             return False
         except Exception as error:
-            self.debug_print(error)
+            self.debug_print("OAI_Modbus.py __get_overlap error: ", error)
 
     def read_regs(self, target="ai", read_ranges=None):
         """
@@ -150,6 +152,7 @@ class OAI_Modbus(ModbusClient):
             print_string = "ao"
         # else:
         #     print("TARGET ERROR")
+        error_flag = False
         with self.lock:
             for k in range(len(read_ranges)):
                 last_read_range.clear()
@@ -176,8 +179,19 @@ class OAI_Modbus(ModbusClient):
                         else:
                             last_read_range.extend(register_list.registers)
                     except Exception as error:
-                        self.debug_print("read error")
+                        self.debug_print("error in modbus module: function read_regs")
                         self.debug_print(error)
+                        self.close_all_processes()
+                        if self.read_thread is not None:
+                            if self.read_thread.is_alive():
+                                print('thread is alive')
+                        else:
+                            print('oai_modbus thread is None')
+                        error_flag = True
+                        break
+
+                    if error_flag:
+                        break
                 try:
                     for i in range(read_ranges[k][1] - read_ranges[k][0]):
                         register_map[read_ranges[k][0] + i] = last_read_range[i]
@@ -196,8 +210,11 @@ class OAI_Modbus(ModbusClient):
         :param: data_list:
         :return: None.
         """
-        self.write_ranges = [[offset, data_list]]
-        self.write_regs_ranges()
+        if self.connection_status:
+            self.write_ranges = [[offset, data_list]]
+            self.write_regs_ranges()
+        else:
+            print('error in write_regs: no connection with device. Try to reconnect')
 
     def write_regs_ranges(self):
         """
@@ -215,6 +232,7 @@ class OAI_Modbus(ModbusClient):
                     buf = []
                 self.write_ranges = buf_reg
 
+            error_flag = False
             for k in range(len(self.write_ranges)):
                 for i in range(0, len(self.write_ranges[k][1]), 10):
                     try:
@@ -226,7 +244,13 @@ class OAI_Modbus(ModbusClient):
                             self.debug_print("Modbus write timeout error")
                     except Exception as error:
                         self.no_answer_counter += 1
+                        self.debug_print('Modbus module has issue in function write_regs_ranges')
                         self.debug_print(error)
+                        self.close_all_processes()
+                        error_flag = True
+                        break
+                if error_flag:
+                    break
 
     def stop_continuously_ai_reading(self):
         self.continuously_ai_flag = False
@@ -251,22 +275,26 @@ class OAI_Modbus(ModbusClient):
             self.continuously_write_flag = True
             self.write_ranges = write
 
-        if self.read_thread.is_alive():
-            pass
+        if self.read_thread is not None:
+            if self.read_thread.is_alive():
+                pass
+            else:
+                self.queues_survey_flag = True
+                self.read_thread.start()
         else:
+            self.read_thread = threading.Thread(name='queue', target=self.queue_continuously_survey, daemon=True)
+        if not self.read_thread.is_alive():
             self.queues_survey_flag = True
             self.read_thread.start()
 
-        if not self.read_thread.is_alive():
-            self.queues_survey_flag = False
-            self.debug_print("some error with thread")
-
-    def __queue_continuously_survey(self):
-        while self.queues_survey_flag:
+    def queue_continuously_survey(self):
+        while self.queues_survey_flag and self.connection_status:
+            # print('thread in _queue_continuously_survey')
             if self.single_ao_flag:
                 try:
                     self.read_regs(target='ao', read_ranges=self.ao_read_ranges)
                 except ValueError as error:
+                    self.debug_print('error "single read ao regs" in function queue_continuously_survey')
                     self.debug_print(error)
                 self.single_ao_flag = False
             if self.single_ai_flag:
@@ -277,6 +305,7 @@ class OAI_Modbus(ModbusClient):
                 try:
                     self.read_regs(target='ao', read_ranges=self.ao_read_ranges)
                 except ValueError as error:
+                    self.debug_print('error "continuously read ao regs" in function queue_continuously_survey')
                     self.debug_print(error)
             if self.continuously_ai_flag:
                 self.read_regs(target='ai', read_ranges=self.ai_read_ranges)
@@ -284,15 +313,17 @@ class OAI_Modbus(ModbusClient):
                 self.write_regs(self.write_ranges[0], self.write_ranges[1])
                 self.continuously_write_flag = False
             time.sleep(self.time_sleep)
-
+        if not self.connection_status:
+            self.debug_print('Modbus module has lost connection with device')
 
 if __name__ == '__main__':
     client = OAI_Modbus(serial_num=['20703699424D', '20703699424D'], debug=True)
     print(client.get_connected_devices())
     client.connect()
-    test_mode = True  # for debug
+    test_mode = False  # for debug
 
     if client.connection_status:
+        print('connection status: ' + str(client.connection_status))
         if test_mode:
             # ---- test write -----
             print("before write:", client.read_regs(target='ao', read_ranges=[[0, 5]])[0:5])
