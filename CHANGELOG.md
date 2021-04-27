@@ -2,6 +2,10 @@
 
 <!--next-version-placeholder-->
 
+## v1.0.2 (2021-04-27)
+### Performance
+* Major version bump test ([`2822b69`](https://github.com/CrinitusFeles/OAI_Modbus/commit/2822b69263bb248dd589ddef631e5b0afefd440a))
+
 ## v1.0.1 (2021-04-27)
 ### Fix
 * Major version bump does not work ([`9a7c94b`](https://github.com/CrinitusFeles/OAI_Modbus/commit/9a7c94b567ee9c7813c89a34a2a6cb5a40b4d1c1))
