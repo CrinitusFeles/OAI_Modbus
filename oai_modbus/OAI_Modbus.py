@@ -51,6 +51,7 @@ class OAI_Modbus(ModbusClient):
                  1 - device already connected
                 -1 - failed connection
         """
+        
         self.serial_numbers.append(serial_num)
         if self.connection_status:
             return 1

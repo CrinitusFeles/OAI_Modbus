@@ -37,14 +37,14 @@ jobs:
       run: |
         python -m poetry install
     
-    - name: Create Release
+    - name: Automatic Releases
       id: create_release
-      uses: actions/create-release@v1
+      uses: marvinpinto/action-automatic-releases@v1.1.2
       env:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
       with:
-        tag_name: v.1.2
-        release_name: Release v.1.2
+        automatic_release_tag: "latest"
+        title: "Development Build"
         draft: false
         prerelease: true
     - name: Upload Release Asset
