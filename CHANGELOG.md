@@ -2,6 +2,13 @@
 
 <!--next-version-placeholder-->
 
+## v2.0.0 (2021-04-28)
+### Fix
+* Major version bump test ([`2babe59`](https://github.com/CrinitusFeles/OAI_Modbus/commit/2babe59f2efeb8ad74630fd3224b951bacc26a43))
+
+### Breaking
+* test ([`2babe59`](https://github.com/CrinitusFeles/OAI_Modbus/commit/2babe59f2efeb8ad74630fd3224b951bacc26a43))
+
 ## v1.0.2 (2021-04-27)
 ### Performance
 * Major version bump test ([`2822b69`](https://github.com/CrinitusFeles/OAI_Modbus/commit/2822b69263bb248dd589ddef631e5b0afefd440a))

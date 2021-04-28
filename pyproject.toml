@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "OAI_ModBus"
-version = "1.0.2"
+version = "2.0.0"
 description = ""
 authors = ["crinitusfeles <crinitusfeles@gmail.com>"]
 
