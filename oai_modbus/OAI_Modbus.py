@@ -2,7 +2,7 @@ from pymodbus.client.sync import ModbusSerialClient as ModbusClient
 import serial.tools.list_ports
 import threading
 import time
-#v1.1.1 perf!!!!!!!
+#v1.1.1 perf!!!!!!!!
 
 class OAI_Modbus(ModbusClient):
     def __init__(self, **kwargs):
